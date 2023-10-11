@@ -1,0 +1,5 @@
+Employees - get al employees from db / redis
+
+Tasks - 
+
+User implmentaiton - user roles 
