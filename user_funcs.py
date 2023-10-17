@@ -6,17 +6,16 @@ import math as m
 from email.mime.text import MIMEText
 
 import models
+from auth import createJWT
 
 
 
 def get_users(organization):
-    models.Base.metadata.clear()
     usr_table = models.create_users_table(organization)
     users = models.session.query(usr_table).all()
     return users
 
 def get_user_by_email(email, organization):
-    models.Base.metadata.clear() # clear the metadata and stops sqlalchemy from complaining about the table already existing
     usr_table = models.create_users_table(organization)
     if email:
         user = models.session.query(usr_table).filter_by(email=email).first()
@@ -25,7 +24,6 @@ def get_user_by_email(email, organization):
     return user
 
 def get_user_by_id(id, organization):
-    models.Base.metadata.clear() # clear the metadata and stops sqlalchemy from complaining about the table already existing
     usr_table = models.create_users_table(organization)
     if id:
         user = models.session.query(usr_table).filter_by(id=id).first()
@@ -95,14 +93,42 @@ def create_user(username, roles, first_name, last_name, email, organization, tel
 # print(create_user("marto", "superadmin", "martin", "briston", "martinbriston01@gmail.com", "bazu", "865987452", "Backend Engineer"))
 
 
-def update_pass(userid, newpass):
+def update_pass(userid, company, newpass): # for first time change
     try:
-        user = models.session.query(models.User).filter_by(id=userid).first()
+        usr_table = models.create_users_table(company)
+        user = models.session.query(usr_table).filter_by(id=userid).first()
         hash = bcrypt.hashpw(newpass.encode('utf-8'), bcrypt.gensalt())
+        # if user.has_changed_pass == True:
+        #     return "User has already changed password"
         user.hash = hash
-        user.has_changed_pass = True
+        user.has_changed_pass = False
         models.session.commit()
-        return "Success"
+        token = createJWT(user)
+        return {
+            'success': True,
+            'token': token,
+        }
+    except Exception as e:
+        print(e)
+        return {
+            'success': False,
+            'error': e
+        }
+    
+def change_pass(otp, id, company, newpass):
+    try:
+        usr_table = models.create_users_table(company)
+        user = models.session.query(usr_table).filter_by(id=id).first()
+        if user.has_changed_pass == True:
+            return "User has already changed password"
+        if bcrypt.checkpw(otp.encode('utf-8'), user.hash.encode('utf-8')):
+            hash = bcrypt.hashpw(newpass.encode('utf-8'), bcrypt.gensalt())
+            user.hash = hash
+            user.has_changed_pass = True
+            models.session.commit()
+            return "Success"
+        else:
+            return "Invalid OTP"
     except Exception as e:
         print(e)
         return f"Error: {e}"

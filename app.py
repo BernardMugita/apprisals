@@ -92,18 +92,51 @@ async def createcompany(request: Request):
         return "Invalid Token"
     
 
-app.post("/changepass")
+@app.post("/firsttimechange")
+async def firsttimechange(request: Request):
+    data = await request.json()
+    auth_header = request.headers.get('Authorization')
+    if auth_header and auth_header.startswith("Bearer "):
+        auth_token = auth_header.split(" ")[1]
+        usr = auth.decodeJWT(auth_token)
+        if usr == 'Invalid':
+            return "Invalid Token"
+        else:
+            id = usr['id']
+            res = user_funcs.update_pass(id, usr['organization'], data["password"])
+            return res
+    else:
+        return "Invalid Token"
+    
+@app.post("/getotp")
+async def getotp(request: Request):
+    auth_header = request.headers.get('Authorization')
+    if auth_header and auth_header.startswith("Bearer "):
+        auth_token = auth_header.split(" ")[1]
+        usr = auth.decodeJWT(auth_token)
+        if usr == 'Invalid':
+            return "Invalid Token"
+        else:
+            id = usr['id']
+            userobj = user_funcs.get_user_by_id(id, usr['organization'])
+            print(userobj)
+            res = auth.getOTP(userobj.email, id, usr['organization'])
+            return res
+    else:
+        return "Invalid Token"
+    
+@app.post("/changepass")
 async def changepass(request: Request):
     data = await request.json()
     auth_header = request.headers.get('Authorization')
     if auth_header and auth_header.startswith("Bearer "):
         auth_token = auth_header.split(" ")[1]
         usr = auth.decodeJWT(auth_token)
-        if usr == False:
+        if usr == 'Invalid':
             return "Invalid Token"
         else:
             id = usr['id']
-            res = user_funcs.update_pass(id, data["password"])
+            res = user_funcs.change_pass(data["otp"], id, usr['organization'], data["password"])
             return res
     else:
         return "Invalid Token"

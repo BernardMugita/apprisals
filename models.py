@@ -70,6 +70,7 @@ class TaskStatus(str, Enum):  # Enum class for task status
 
 
 def create_users_table(company_name):
+        Base.metadata.clear()
         class User(Base):
             __tablename__ = f"{company_name}_users"
 
@@ -88,6 +89,7 @@ def create_users_table(company_name):
 
 def create_tasks_table(company_name):
     # Pydantic model for the employee table
+    Base.metadata.clear()
     class Tasks(Base):
         __tablename__ = f"{company_name}_tasks"
 
@@ -102,6 +104,7 @@ def create_tasks_table(company_name):
     return Tasks
     
 def create_payslips_table(company_name):
+    Base.metadata.clear()
     class Payslips(Base):
         __tablename__ = f"{company_name}_payslips"
 
@@ -116,6 +119,7 @@ def create_payslips_table(company_name):
     return Payslips
 
 def create_messages_table(company_name):
+    Base.metadata.clear()
     class Messages(Base):
         __tablename__ = f"{company_name}_messages"
 
@@ -136,7 +140,6 @@ def create_tables():
 
 def create_company_tables(company_name):
     try:
-        Base.metadata.clear()
         usr_table = f"{company_name}_users"
         tasks_table = f"{company_name}_tasks"
         payslips_table = f"{company_name}_payslips"
@@ -154,7 +157,6 @@ def create_company_tables(company_name):
 
 def delete_company_tables(company_name):
     try:
-        Base.metadata.clear()
         usr_table = f"{company_name}_users"
         tasks_table = f"{company_name}_tasks"
         payslips_table = f"{company_name}_payslips"
@@ -169,70 +171,13 @@ def delete_company_tables(company_name):
         return "Success"
     except Exception as e:
         return f"Error: {e}"
+        
 
 
 # use this to test the create_company_tables function
 # create_company_tables("bazu")
 # delete_company_tables("bazu")
 
-
-# def get_users(organization):
-#     Base.metadata.clear()
-#     usr_table = create_users_table(organization)
-#     users = session.query(usr_table).all()
-#     return users
-
-# def get_user_by_email(email, organization):
-#     Base.metadata.clear() # clear the metadata and stops sqlalchemy from complaining about the table already existing
-#     usr_table = create_users_table(organization)
-#     if email:
-#         user = session.query(usr_table).filter_by(email=email).first()
-#     else:
-#         user = None
-#     return user
-
-# def get_user_by_id(id, organization):
-#     Base.metadata.clear() # clear the metadata and stops sqlalchemy from complaining about the table already existing
-#     usr_table = create_users_table(organization)
-#     if id:
-#         user = session.query(usr_table).filter_by(id=id).first()
-#     else:
-#         user = None
-#     return user
-
-
-
-
-# from auth import createOTP
-# # for creating a user
-# def create_user(username, roles, first_name, last_name, email, organization, telephone, job_role):
-#     usr_table = create_users_table(organization) # assuming the organization is the company name
-#     # generate a one time password
-#     otp = createOTP()
-#     hash = bcrypt.hashpw(otp.encode('utf-8'), bcrypt.gensalt())
-#     new_user = usr_table(username=username, roles=roles, first_name=first_name, last_name=last_name, email=email, organization=organization, telephone=telephone, hash=hash, job_role=job_role)
-#     session.add(new_user)
-#     session.commit()
-#     usr_obj = session.query(usr_table).filter_by(email=email).filter_by(first_name=first_name).first()
-#     res = {
-#         "id": usr_obj.id,
-#         "username": usr_obj.username,
-#         "roles": usr_obj.roles,
-#         "first_name": usr_obj.first_name,
-#         "last_name": usr_obj.last_name,
-#         "email": usr_obj.email,
-#         "organization": usr_obj.organization,
-#         "telephone": usr_obj.telephone,
-#         "job_role": usr_obj.job_role,
-#         "OTP": otp
-#     }
-#     return res
-
-# use this to test the create_user function
-
-# use this to test the get_users function
-# for user in get_users("Tesla"):
-#     print(user.username)
 
 
 

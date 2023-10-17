@@ -67,4 +67,16 @@ def check_admin_JWT(jwt_encoded):
         return False
     except jwt.InvalidTokenError:
         return False
+    
+def getOTP(email, id, company):
+    user = user_funcs.get_user_by_id(id, company)
+    if user:
+        otp = user_funcs.createOTP()
+        res = user_funcs.update_pass(id, company, otp)
+        otp_res = user_funcs.send_OTP(email, otp)
+        if otp_res.startswith("Error"):
+            return otp_res
+        return res
+    else:
+        return "Invalid ID"
 
