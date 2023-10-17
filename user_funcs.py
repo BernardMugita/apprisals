@@ -33,11 +33,11 @@ def get_user_by_id(id, organization):
 
 
 
-def send_OTP(email, otp):
+def send_OTP(email, otp, subject="Your account was created successfully"):
     try:
         # create message object instance
         msg = MIMEText(f"Your One Time Password is {otp}")
-        msg['Subject'] = "Your account was created successfully"
+        msg['Subject'] = subject
         msg['From'] = 'noreply@finalyze.app'
         msg['To'] = email
 
@@ -98,7 +98,7 @@ def update_pass(userid, company, newpass): # for first time change
         usr_table = models.create_users_table(company)
         user = models.session.query(usr_table).filter_by(id=userid).first()
         hash = bcrypt.hashpw(newpass.encode('utf-8'), bcrypt.gensalt())
-        # if user.has_changed_pass == True:
+        # if user.has_changed_pass == False:
         #     return "User has already changed password"
         user.hash = hash
         user.has_changed_pass = False
