@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, String, Integer, Enum, ForeignKey, Float
+from sqlalchemy import create_engine, Column, String, Integer, Enum, ForeignKey, Float, Boolean
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
 from enum import Enum as PydanticEnum
@@ -6,6 +6,8 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 import pymysql
 import bcrypt
+import smtplib
+from email.mime.text import MIMEText
 
 import uuid
 import os
@@ -50,6 +52,8 @@ engine = create_engine(database_uri, echo=True)
 class Role(str, Enum):  # Enum class for roles
     admin = "admin"
     user = "user"
+    superadmin = "superadmin"
+    superuser = "superuser"
 
 
 class PayslipStatus(str, Enum):  # Enum class for payslip status
@@ -79,6 +83,7 @@ def create_users_table(company_name):
             telephone = Column(String(20), nullable=False)
             hash = Column(String(255), nullable=False)
             job_role = Column(String(255), nullable=False)
+            has_changed_pass = Column(Boolean, nullable=False, default=False)
         return User
 
 def create_tasks_table(company_name):
@@ -130,65 +135,100 @@ def create_tables():
     Base.metadata.create_all(engine)
 
 def create_company_tables(company_name):
-    usr_table = f"{company_name}_users"
-    tasks_table = f"{company_name}_tasks"
-    payslips_table = f"{company_name}_payslips"
-    messages_table = f"{company_name}_messages"
-    
-    usr_table = create_users_table(company_name)
-    tasks_table = create_tasks_table(company_name)
-    payslips_table = create_payslips_table(company_name)
-    messages_table = create_messages_table(company_name)
+    try:
+        Base.metadata.clear()
+        usr_table = f"{company_name}_users"
+        tasks_table = f"{company_name}_tasks"
+        payslips_table = f"{company_name}_payslips"
+        messages_table = f"{company_name}_messages"
+        
+        usr_table = create_users_table(company_name)
+        tasks_table = create_tasks_table(company_name)
+        payslips_table = create_payslips_table(company_name)
+        messages_table = create_messages_table(company_name)
 
-    Base.metadata.create_all(engine)
+        Base.metadata.create_all(engine)
+        return "Success"
+    except Exception as e:
+        return f"Error: {e}"
+
+def delete_company_tables(company_name):
+    try:
+        Base.metadata.clear()
+        usr_table = f"{company_name}_users"
+        tasks_table = f"{company_name}_tasks"
+        payslips_table = f"{company_name}_payslips"
+        messages_table = f"{company_name}_messages"
+
+        usr_table = create_users_table(company_name)
+        tasks_table = create_tasks_table(company_name)
+        payslips_table = create_payslips_table(company_name)
+        messages_table = create_messages_table(company_name)
+
+        Base.metadata.drop_all(engine)
+        return "Success"
+    except Exception as e:
+        return f"Error: {e}"
+
 
 # use this to test the create_company_tables function
-# create_company_tables("Tesla")
+# create_company_tables("bazu")
+# delete_company_tables("bazu")
 
 
-def get_users(organization):
-    Base.metadata.clear()
-    usr_table = create_users_table(organization)
-    users = session.query(usr_table).all()
-    return users
+# def get_users(organization):
+#     Base.metadata.clear()
+#     usr_table = create_users_table(organization)
+#     users = session.query(usr_table).all()
+#     return users
 
-def get_user_by_email(email, organization):
-    Base.metadata.clear() # clear the metadata and stops sqlalchemy from complaining about the table already existing
-    usr_table = create_users_table(organization)
-    if email:
-        user = session.query(usr_table).filter_by(email=email).first()
-    else:
-        user = None
-    return user
+# def get_user_by_email(email, organization):
+#     Base.metadata.clear() # clear the metadata and stops sqlalchemy from complaining about the table already existing
+#     usr_table = create_users_table(organization)
+#     if email:
+#         user = session.query(usr_table).filter_by(email=email).first()
+#     else:
+#         user = None
+#     return user
+
+# def get_user_by_id(id, organization):
+#     Base.metadata.clear() # clear the metadata and stops sqlalchemy from complaining about the table already existing
+#     usr_table = create_users_table(organization)
+#     if id:
+#         user = session.query(usr_table).filter_by(id=id).first()
+#     else:
+#         user = None
+#     return user
 
 
-from auth import createOTP
-# for creating a user
-def create_user(username, roles, first_name, last_name, email, organization, telephone, job_role):
-    usr_table = create_users_table(organization) # assuming the organization is the company name
-    # generate a one time password
-    otp = createOTP()
-    hash = bcrypt.hashpw(otp.encode('utf-8'), bcrypt.gensalt())
-    new_user = usr_table(username=username, roles=roles, first_name=first_name, last_name=last_name, email=email, organization=organization, telephone=telephone, hash=hash, job_role=job_role)
-    session.add(new_user)
-    session.commit()
-    usr_obj = session.query(usr_table).filter_by(email=email).filter_by(first_name=first_name).first()
-    res = {
-        "id": usr_obj.id,
-        "username": usr_obj.username,
-        "roles": usr_obj.roles,
-        "first_name": usr_obj.first_name,
-        "last_name": usr_obj.last_name,
-        "email": usr_obj.email,
-        "organization": usr_obj.organization,
-        "telephone": usr_obj.telephone,
-        "job_role": usr_obj.job_role,
-        "OTP": otp
-    }
-    return res
+
+
+# from auth import createOTP
+# # for creating a user
+# def create_user(username, roles, first_name, last_name, email, organization, telephone, job_role):
+#     usr_table = create_users_table(organization) # assuming the organization is the company name
+#     # generate a one time password
+#     otp = createOTP()
+#     hash = bcrypt.hashpw(otp.encode('utf-8'), bcrypt.gensalt())
+#     new_user = usr_table(username=username, roles=roles, first_name=first_name, last_name=last_name, email=email, organization=organization, telephone=telephone, hash=hash, job_role=job_role)
+#     session.add(new_user)
+#     session.commit()
+#     usr_obj = session.query(usr_table).filter_by(email=email).filter_by(first_name=first_name).first()
+#     res = {
+#         "id": usr_obj.id,
+#         "username": usr_obj.username,
+#         "roles": usr_obj.roles,
+#         "first_name": usr_obj.first_name,
+#         "last_name": usr_obj.last_name,
+#         "email": usr_obj.email,
+#         "organization": usr_obj.organization,
+#         "telephone": usr_obj.telephone,
+#         "job_role": usr_obj.job_role,
+#         "OTP": otp
+#     }
+#     return res
 
 # use this to test the create_user function
-# print(create_user("AMionwa", "admin", "Andy", "Mionwa", "andymm@tesla.com", "Tesla", "669875421", "Lead Engineer"))
 
 # use this to test the get_users function
 # for user in get_users("Tesla"):
