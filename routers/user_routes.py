@@ -121,7 +121,7 @@ async def getotp(request: Request):
             id = usr['id']
             userobj = user_funcs.get_user_by_id(id, usr['organization'])
             print(userobj)
-            res = auth.getOTP(userobj.email, id, usr['organization'])
+            res = user_funcs.auth.getOTP(userobj.email, id, usr['organization'])
             return res
     else:
         return "Invalid Token"
