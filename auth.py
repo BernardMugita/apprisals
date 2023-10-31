@@ -7,18 +7,21 @@ import user_funcs
 
 def login(email ,password, organization):
     # check if the user exists
-    user = user_funcs.get_user_by_email(email, organization)
-    if user:
-        # check if the password is correct
-        pwd = password.encode('utf-8')
-        if bcrypt.checkpw(pwd, user.hash.encode('utf-8')):
-            # create a jwt token
-            jwt_encoded = createJWT(user)
-            return jwt_encoded
+    try:
+        user = user_funcs.get_user_by_email(email, organization)
+        if user:
+            # check if the password is correct
+            pwd = password.encode('utf-8')
+            if bcrypt.checkpw(pwd, user.hash.encode('utf-8')):
+                # create a jwt token
+                jwt_encoded = createJWT(user)
+                return jwt_encoded
+            else:
+                return "Incorrect Password"
         else:
-            return "Incorrect Password"
-    else:
-        return "User does not exist"
+            return "User does not exist"
+    except Exception as e:
+        return f"Error: {e}"
 
 def createJWT(user):
     payload = {

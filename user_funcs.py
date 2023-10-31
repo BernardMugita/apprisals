@@ -6,32 +6,68 @@ import math as m
 from email.mime.text import MIMEText
 
 import models
-from auth import createJWT
+import auth
 
 
+def user_parser(user, many=False):
+    if many:
+        return [user_parser(item) for item in user]
+    else:
+        return {
+            "id": user.id,
+            "username": user.username,
+            "roles": user.roles,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+            "organization": user.organization,
+            "telephone": user.telephone,
+            "job_role": user.job_role,
+            "has_changed_pass": user.has_changed_pass,
+            "company_info": {
+                "id": user.company.id,
+                "name": user.company.name,
+                "email": user.company.email,
+                "telephone": user.company.telephone,
+                "address": user.company.address,
+                "city": user.company.city,
+                "country": user.company.country,
+                "domain_name": user.company.domain_name,
+                "table_name": user.company.table_name,
+            }
+        }
 
 def get_users(organization):
+    models.Base.metadata.clear()
     usr_table = models.create_users_table(organization)
+    company = models.create_companies_table(usr_table)
     users = models.session.query(usr_table).all()
+    users = user_parser(users, many=True)
     return users
 
 def get_user_by_email(email, organization):
+    models.Base.metadata.clear()
     usr_table = models.create_users_table(organization)
+    company = models.create_companies_table(usr_table)
     if email:
         user = models.session.query(usr_table).filter_by(email=email).first()
+        user = user_parser(user)
     else:
         user = None
     return user
 
 def get_user_by_id(id, organization):
+    # models.Base.metadata.clear()
     usr_table = models.create_users_table(organization)
+    company = models.create_companies_table(usr_table)
     if id:
         user = models.session.query(usr_table).filter_by(id=id).first()
+        obj = user_parser(user)
     else:
         user = None
-    return user
+    return obj
 
-
+    
 
 def send_OTP(email, otp, subject="Your account was created successfully"):
     try:
@@ -68,34 +104,48 @@ def create_user(username, roles, first_name, last_name, email, organization, tel
         return otp_res
     hash = bcrypt.hashpw(otp.encode('utf-8'), bcrypt.gensalt())
     try:
-        new_user = usr_table(username=username, roles=roles, first_name=first_name, last_name=last_name, email=email, organization=organization, telephone=telephone, hash=hash, job_role=job_role)
+        # models.Base.metadata.clear()   
+        compnytable = models.create_companies_table(usr_table)
+        company = models.session.query(compnytable).filter_by(name="bazu").first() #TODO: change this to the company name
+        new_user = usr_table(username=username, roles=roles, first_name=first_name, last_name=last_name, email=email, organization=organization, telephone=telephone, hash=hash, job_role=job_role, company_id=company.id)
         models.session.add(new_user)
         models.session.commit()
         usr_obj = models.session.query(usr_table).filter_by(email=email).filter_by(first_name=first_name).first()
-        res = {
-            "id": usr_obj.id,
-            "username": usr_obj.username,
-            "roles": usr_obj.roles,
-            "first_name": usr_obj.first_name,
-            "last_name": usr_obj.last_name,
-            "email": usr_obj.email,
-            "organization": usr_obj.organization,
-            "telephone": usr_obj.telephone,
-            "job_role": usr_obj.job_role,
-            "OTP": otp,
-            "has_changed_pass": usr_obj.has_changed_pass
-        }
+        res = user_parser(usr_obj)
         return res
     except Exception as e:
         print(e)
         return f"Error: {e}"
 
-# print(create_user("marto", "superadmin", "martin", "briston", "martinbriston01@gmail.com", "bazu", "865987452", "Backend Engineer"))
+# models.Base.metadata.clear()
+# print(create_user("marto", "superadmin", "martin", "briston", "martinbriston01@gmail.com", "bazu", "865987452", "Backend Engineer", company))
 
+def edit_user(id, username, roles, first_name, last_name, email, organization, telephone, job_role, company):
+    try:
+        models.Base.metadata.clear()
+        usr_table = models.create_users_table(organization)
+        company_table = models.create_companies_table(usr_table)
+        user = models.session.query(usr_table).filter_by(id=id).first()
+        user.username = username
+        user.roles = roles
+        user.first_name = first_name
+        user.last_name = last_name
+        user.email = email
+        user.organization = organization
+        user.telephone = telephone
+        user.job_role = job_role
+        user.company_id = company
+        models.session.commit()
+        return "Success"
+    except Exception as e:
+        print(e)
+        return f"Error: {e}"
 
 def update_pass(userid, company, newpass): # for first time change
     try:
+        models.Base.metadata.clear()
         usr_table = models.create_users_table(company)
+        company_table = models.create_companies_table(usr_table)
         user = models.session.query(usr_table).filter_by(id=userid).first()
         hash = bcrypt.hashpw(newpass.encode('utf-8'), bcrypt.gensalt())
         # if user.has_changed_pass == False:
@@ -103,7 +153,7 @@ def update_pass(userid, company, newpass): # for first time change
         user.hash = hash
         user.has_changed_pass = False
         models.session.commit()
-        token = createJWT(user)
+        token = auth.createJWT(user)
         return {
             'success': True,
             'token': token,
@@ -117,6 +167,7 @@ def update_pass(userid, company, newpass): # for first time change
     
 def change_pass(otp, id, company, newpass):
     try:
+        models.Base.metadata.clear()
         usr_table = models.create_users_table(company)
         user = models.session.query(usr_table).filter_by(id=id).first()
         if user.has_changed_pass == True:

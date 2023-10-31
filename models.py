@@ -8,6 +8,7 @@ import pymysql
 import bcrypt
 import smtplib
 from email.mime.text import MIMEText
+import re
 
 import uuid
 import os
@@ -70,26 +71,50 @@ class TaskStatus(str, Enum):  # Enum class for task status
 
 
 def create_users_table(company_name):
-        Base.metadata.clear()
-        class User(Base):
-            __tablename__ = f"{company_name}_users"
+    class User(Base):
+        __tablename__ = f"{company_name}_users"
 
-            id = Column(String(36), primary_key=True, default=str(uuid.uuid4()))
-            username = Column(String(50), nullable=False)
-            roles = Column(String(50), nullable=False)
-            first_name = Column(String(50), nullable=False)
-            last_name = Column(String(50), nullable=False)
-            email = Column(String(100), nullable=False, unique=True)
-            organization = Column(String(100), nullable=False)
-            telephone = Column(String(20), nullable=False)
-            hash = Column(String(255), nullable=False)
-            job_role = Column(String(255), nullable=False)
-            has_changed_pass = Column(Boolean, nullable=False, default=False)
-        return User
+        id = Column(String(36), primary_key=True, default=str(uuid.uuid4()))
+        username = Column(String(50), nullable=False)
+        roles = Column(String(50), nullable=False)
+        first_name = Column(String(50), nullable=False)
+        last_name = Column(String(50), nullable=False)
+        email = Column(String(100), nullable=False, unique=True)
+        organization = Column(String(100), nullable=False)
+        telephone = Column(String(20), nullable=False)
+        hash = Column(String(255), nullable=False)
+        job_role = Column(String(255), nullable=False)
+        has_changed_pass = Column(Boolean, nullable=False, default=False)
+        company_id = Column(String(36), ForeignKey("companies.id"))
+        company = relationship("Company", foreign_keys=[company_id])
+        # tasks = relationship("Tasks", backref=f"{company_name}_users")
+        # payslips = relationship("Payslips", backref=f"{company_name}_users",)
+        # messages = relationship("Messages", backref=f"{company_name}_users",)
+    return User
+
+def create_companies_table(user_table):
+    # Base.metadata.clear()
+    User = user_table
+    # Tasks = create_tasks_table(table_name)
+    # Payslips = create_payslips_table(table_name)
+    # Messages = create_messages_table(table_name)
+    class Company(Base):
+        __tablename__ = "companies"
+
+        id = Column(String(36), primary_key=True, default=str(uuid.uuid4()))
+        name = Column(String(255), nullable=False)
+        email = Column(String(255), nullable=False)
+        telephone = Column(String(20), nullable=False)
+        address = Column(String(255), nullable=False)
+        city = Column(String(255), nullable=False)
+        country = Column(String(255), nullable=False)
+        domain_name = Column(String(255), nullable=False)
+        table_name = Column(String(255), nullable=False)
+        employees = relationship("User", backref="companies")
+    return Company
 
 def create_tasks_table(company_name):
     # Pydantic model for the employee table
-    Base.metadata.clear()
     class Tasks(Base):
         __tablename__ = f"{company_name}_tasks"
 
@@ -97,21 +122,31 @@ def create_tasks_table(company_name):
         title = Column(String(255), nullable=False)
         description = Column(String(1000), nullable=False)
         status = Column(String(50), nullable=False)
-        assigned_to = Column(String(255), nullable=False) # change to foreign key??
+        assigned_to_id = Column(String(255), ForeignKey(f"{company_name}_users.id"))
+        assigned_by_id = Column(String(255), ForeignKey(f"{company_name}_users.id"))
+
+        assigned_to = relationship("User", foreign_keys=[assigned_to_id])
+        assigned_by = relationship("User", foreign_keys=[assigned_by_id])
+
         task_type = Column(String(50), nullable=False)
         rating = Column(Integer, nullable=False)
         feedback = Column(String(1000), nullable=False)
+        due_date = Column(String(20), nullable=False)
+        # parent_id = Column(String(36), nullable=True)
+
     return Tasks
     
 def create_payslips_table(company_name):
-    Base.metadata.clear()
     class Payslips(Base):
         __tablename__ = f"{company_name}_payslips"
 
         id = Column(String(36), primary_key=True, default=str(uuid.uuid4()))
-        employee_id = Column(String(255), nullable=False) # change to foreign key??
-        employee_name = Column(String(255), nullable=False)
-        prepared_by = Column(String(255), nullable=False)
+        employee_id = Column(String(255), ForeignKey(f"{company_name}_users.id")) 
+        prepared_by_id = Column(String(255), ForeignKey(f"{company_name}_users.id"))
+
+        employee = relationship("User", foreign_keys=[employee_id])
+        prepared_by = relationship("User", foreign_keys=[prepared_by_id])
+
         date = Column(String(20), nullable=False)
         period = Column(String(20), nullable=False)
         amount = Column(Float, nullable=False)
@@ -119,13 +154,16 @@ def create_payslips_table(company_name):
     return Payslips
 
 def create_messages_table(company_name):
-    Base.metadata.clear()
     class Messages(Base):
         __tablename__ = f"{company_name}_messages"
 
         id = Column(String(36), primary_key=True, default=str(uuid.uuid4()))
-        sender = Column(String(255), nullable=False)
-        receiver = Column(String(255), nullable=False)
+        sender_id = Column(String(255), ForeignKey(f"{company_name}_users.id"))
+        receiver_id = Column(String(255), ForeignKey(f"{company_name}_users.id"))
+
+        sender = relationship("User", foreign_keys=[sender_id])
+        receiver = relationship("User", foreign_keys=[receiver_id])
+
         date = Column(String(20), nullable=False)
         message = Column(String(1000), nullable=False)
     return Messages
@@ -138,14 +176,42 @@ session = Session()
 def create_tables():
     Base.metadata.create_all(engine)
 
+def extract_name(domain):
+    reg_patt = r"(?:https?:\/\/)?(?:[^@\/\n]+@)?(?:www\.)?([^:\/\n]+)"
+    domain_name = re.match(reg_patt, domain).group(1)
+    domain_patt = r"([a-zA-Z0-9-]+)(\.[a-zA-Z]{2,5})?(\.[a-zA-Z]+$)"
+    final = re.match(domain_patt, domain_name).group(1)
+    return final
+
+def create_company(company_name, email, telephone, address, city, country, domain_name):
+    try:
+        Base.metadata.clear()
+        table_name = extract_name(domain_name)
+        user = create_users_table(table_name)
+        company = create_companies_table(user)
+        Base.metadata.create_all(engine)
+        res = create_company_tables(table_name)
+        if res != "Success":
+            return f"Error: {res}"
+        else:
+            # companies_table = create_companies_table(user)
+            new_company = company(name=company_name, email=email, telephone=telephone, address=address, city=city, country=country, domain_name=domain_name, table_name=table_name)
+            session.add(new_company)
+            session.commit()
+            return "Success"    
+    except Exception as e:
+        return f"Error: {e}"
+
 def create_company_tables(company_name):
     try:
+        # Base.metadata.clear()
         usr_table = f"{company_name}_users"
         tasks_table = f"{company_name}_tasks"
         payslips_table = f"{company_name}_payslips"
         messages_table = f"{company_name}_messages"
         
         usr_table = create_users_table(company_name)
+        company_table = create_companies_table(usr_table)
         tasks_table = create_tasks_table(company_name)
         payslips_table = create_payslips_table(company_name)
         messages_table = create_messages_table(company_name)
@@ -154,6 +220,8 @@ def create_company_tables(company_name):
         return "Success"
     except Exception as e:
         return f"Error: {e}"
+
+# print(create_company_tables("bazu"))
 
 def delete_company_tables(company_name):
     try:
@@ -176,7 +244,7 @@ def delete_company_tables(company_name):
 
 # use this to test the create_company_tables function
 # create_company_tables("bazu")
-# delete_company_tables("bazu")
+# print(delete_company_tables("acme"))
 
 
 
