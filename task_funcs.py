@@ -24,7 +24,7 @@ def create_task(title, description, status, assigned_to_id, assigned_by_id, task
         task = Tasks(
             title=title,
             description=description,
-            status=status,
+            status='Pending',
             assigned_to_id=assigned_to_id,
             assigned_by_id=assigned_by_id,
             task_type=task_type,
@@ -106,6 +106,37 @@ def mark_dispute(task_id, company_name):
         task.status = "Disputed"
         models.session.commit()
         return "Success"
+    except Exception as e:
+        print(e)
+        return f"Error: {e}"
+    
+def mark_pending(task_id, company_name):
+    try:
+        User, Company, Task, Payslip, Messages = models.create_model_tables(company_name)
+        task = models.session.query(Task).filter_by(id=task_id).first()
+        task.status = "Pending"
+        models.session.commit()
+        return "Success"
+    except Exception as e:
+        print(e)
+        return f"Error: {e}"
+
+def get_all_pending(user_id, company_name):
+    try:
+        User, Company, Task, Payslip, Messages = models.create_model_tables(company_name)
+        tasks = models.session.query(Task).filter_by(assigned_to_id=user_id, status='Pending').all()
+        res = task_parser(tasks, many=True)
+        return res
+    except Exception as e:
+        print(e)
+        return f"Error: {e}"
+    
+def get_all_done(user_id, company_name):
+    try:
+        User, Company, Task, Payslip, Messages = models.create_model_tables(company_name)
+        tasks = models.session.query(Task).filter_by(assigned_to_id=user_id, status='Done').all()
+        res = task_parser(tasks, many=True)
+        return res
     except Exception as e:
         print(e)
         return f"Error: {e}"
