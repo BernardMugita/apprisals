@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from fastapi import Request
+import json
 import user_funcs
+import redis_funcs
 
 router = APIRouter()
 
@@ -14,8 +16,13 @@ async def getallusers(request: Request):
         if usr == "Invalid":
             return "Invalid Token"
         else:
-            users = user_funcs.get_users(usr["organization"])
-            return users
+            if redis_funcs.redis_exists(f"{usr['organization']}", 'allusers'):
+                res = redis_funcs.redis_get(f"{usr['organization']}", 'allusers')
+                return json.loads(res)
+            else:
+                users = user_funcs.get_users(usr["organization"])
+                redis_funcs.redis_set(f"{usr['organization']}", 'allusers' ,json.dumps(users))
+                return users
     else:
         return "Invalid Token" 
     
@@ -41,8 +48,13 @@ async def login(request: Request):
     email = data["email"]
     password = data["password"]
     company = data["company"]
-    ans = user_funcs.auth.login(email, password, company)
-    return ans
+    if redis_funcs.redis_exists(f"{company}", 'auth'):
+        res = redis_funcs.redis_get(f"{company}", 'auth')
+        return json.loads(res)
+    else:
+        ans = user_funcs.auth.login(email, password, company)
+        redis_funcs.redis_set(f"{company}", 'auth', json.dumps(ans))
+        return ans
 
 
 @router.post("/users/createuser")

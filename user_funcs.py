@@ -51,13 +51,13 @@ def get_user_by_email(email, organization):
     company = models.create_companies_table(usr_table)
     if email:
         user = models.session.query(usr_table).filter_by(email=email).first()
-        user = user_parser(user)
+        # user = user_parser(user)
     else:
         user = None
     return user
 
 def get_user_by_id(id, organization):
-    # models.Base.metadata.clear()
+    models.Base.metadata.clear()
     usr_table = models.create_users_table(organization)
     company = models.create_companies_table(usr_table)
     if id:
@@ -169,6 +169,7 @@ def change_pass(otp, id, company, newpass):
     try:
         models.Base.metadata.clear()
         usr_table = models.create_users_table(company)
+        company_table = models.create_companies_table(usr_table)
         user = models.session.query(usr_table).filter_by(id=id).first()
         if user.has_changed_pass == True:
             return "User has already changed password"

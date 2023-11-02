@@ -29,6 +29,7 @@ def createJWT(user):
         "organization": user.organization,
         "roles": user.roles,
         "first_name": user.first_name,
+        "has_changed_pass": user.has_changed_pass,
         'exp': datetime.datetime.utcnow() + datetime.timedelta(days=7)
     }
     jwt_encoded = jwt.encode( payload, 'secret', algorithm='HS256')

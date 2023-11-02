@@ -85,6 +85,7 @@ def create_users_table(company_name):
         hash = Column(String(255), nullable=False)
         job_role = Column(String(255), nullable=False)
         has_changed_pass = Column(Boolean, nullable=False, default=False)
+
         company_id = Column(String(36), ForeignKey("companies.id"))
         company = relationship("Company", foreign_keys=[company_id])
         # tasks = relationship("Tasks", backref=f"{company_name}_users")
