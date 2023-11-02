@@ -20,11 +20,8 @@ def task_parser(task, many=False):
 
 def create_task(title, description, status, assigned_to_id, assigned_by_id, task_type, rating, feedback, due_date, company_name):
     try:
-        models.Base.metadata.clear()
-        user_table = models.create_users_table(company_name)
-        company_table = models.create_companies_table(user_table)
-        task_table = models.create_tasks_table(company_name)
-        task = task_table(
+        User, Company, Tasks, Payslip, Messages = models.create_model_tables(company_name)
+        task = Tasks(
             title=title,
             description=description,
             status=status,
@@ -44,11 +41,8 @@ def create_task(title, description, status, assigned_to_id, assigned_by_id, task
     
 def get_tasks(company_name):
     try:
-        models.Base.metadata.clear()
-        task_table = models.create_tasks_table(company_name)
-        usr_table = models.create_users_table(company_name)
-        company_table = models.create_companies_table(usr_table)
-        tasks = models.session.query(task_table).all()
+        User, Company, Tasks, Payslip, Messages = models.create_model_tables(company_name)
+        tasks = models.session.query(Tasks).all()
         res = task_parser(tasks, many=True)
         return res
     except Exception as e:
@@ -57,11 +51,8 @@ def get_tasks(company_name):
     
 def get_task_by_id(task_id, company_name):
     try:
-        models.Base.metadata.clear()
-        task_table = models.create_tasks_table(company_name)
-        usr_table = models.create_users_table(company_name)
-        company_table = models.create_companies_table(usr_table)
-        task = models.session.query(task_table).filter_by(id=task_id).first()
+        User, Company, Task, Payslip, Messages = models.create_model_tables(company_name)
+        task = models.session.query(Task).filter_by(id=task_id).first()
         obj = task_parser(task)
         return obj
     except Exception as e:
@@ -70,11 +61,8 @@ def get_task_by_id(task_id, company_name):
     
 def edit_task(title, description, status, assigned_to_id, assigned_by_id, task_type, rating, feedback, due_date, company_name):
     try:
-        models.Base.metadata.clear()
-        task_table = models.create_tasks_table(company_name)
-        usr_table = models.create_users_table(company_name)
-        company_table = models.create_companies_table(usr_table)
-        task = models.session.query(task_table).filter_by(title=title).first()
+        User, Company, Task, Payslip, Messages = models.create_model_tables(company_name)
+        task = models.session.query(Task).filter_by(title=title).first()
         task.description = description
         task.status = status
         task.assigned_to_id = assigned_to_id
@@ -91,11 +79,8 @@ def edit_task(title, description, status, assigned_to_id, assigned_by_id, task_t
     
 def delete_task(task_id, company_name):
     try:
-        models.Base.metadata.clear()
-        task_table = models.create_tasks_table(company_name)
-        usr_table = models.create_users_table(company_name)
-        company_table = models.create_companies_table(usr_table)
-        task = models.session.query(task_table).filter_by(id=task_id).first()
+        User, Company, Task, Payslip, Messages = models.create_model_tables(company_name)
+        task = models.session.query(Task).filter_by(id=task_id).first()
         models.session.delete(task)
         models.session.commit()
         return "Success"
@@ -105,11 +90,8 @@ def delete_task(task_id, company_name):
     
 def mark_done(task_id, company_name):
     try:
-        models.Base.metadata.clear()
-        task_table = models.create_tasks_table(company_name)
-        usr_table = models.create_users_table(company_name)
-        company_table = models.create_companies_table(usr_table)
-        task = models.session.query(task_table).filter_by(id=task_id).first()
+        User, Company, Task, Payslip, Messages = models.create_model_tables(company_name)
+        task = models.session.query(Task).filter_by(id=task_id).first()
         task.status = "Done"
         models.session.commit()
         return "Success"
@@ -119,11 +101,8 @@ def mark_done(task_id, company_name):
     
 def mark_dispute(task_id, company_name):
     try:
-        models.Base.metadata.clear()
-        task_table = models.create_tasks_table(company_name)
-        usr_table = models.create_users_table(company_name)
-        company_table = models.create_companies_table(usr_table)
-        task = models.session.query(task_table).filter_by(id=task_id).first()
+        User, Company, Task, Payslip, Messages = models.create_model_tables(company_name)
+        task = models.session.query(Task).filter_by(id=task_id).first()
         task.status = "Disputed"
         models.session.commit()
         return "Success"

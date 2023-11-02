@@ -48,13 +48,13 @@ async def login(request: Request):
     email = data["email"]
     password = data["password"]
     company = data["company"]
-    if redis_funcs.redis_exists(f"{company}", 'auth'):
-        res = redis_funcs.redis_get(f"{company}", 'auth')
-        return json.loads(res)
-    else:
-        ans = user_funcs.auth.login(email, password, company)
-        redis_funcs.redis_set(f"{company}", 'auth', json.dumps(ans))
-        return ans
+    # if redis_funcs.redis_exists(f"{company}", 'auth'):
+    #     res = redis_funcs.redis_get(f"{company}", 'auth')
+    #     return json.loads(res)
+    # else:
+    ans = user_funcs.auth.login(email, password, company)
+    # redis_funcs.redis_set(f"{company}", 'auth', json.dumps(ans))
+    return ans
 
 
 @router.post("/users/createuser")

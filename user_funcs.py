@@ -38,30 +38,48 @@ def user_parser(user, many=False):
         }
 
 def get_users(organization):
-    models.Base.metadata.clear()
-    usr_table = models.create_users_table(organization)
-    company = models.create_companies_table(usr_table)
-    users = models.session.query(usr_table).all()
+    User, Company, Task, Payslip, Messages = models.create_model_tables(organization)
+    users = models.session.query(User).all()
     users = user_parser(users, many=True)
     return users
 
+# def get_user_by_email(email, organization):
+#     models.Base.metadata.clear()
+#     usr_table = models.create_users_table(organization)
+#     company = models.create_companies_table(usr_table)
+#     if email:
+#         user = models.session.query(usr_table).filter_by(email=email).first()
+#         # user = user_parser(user)
+#     else:
+#         user = None
+#     return user
+
 def get_user_by_email(email, organization):
-    models.Base.metadata.clear()
-    usr_table = models.create_users_table(organization)
-    company = models.create_companies_table(usr_table)
+    # models.Base.metadata.clear()
+    User, Company, Task, Payslip, Messages = models.create_model_tables(organization)
     if email:
-        user = models.session.query(usr_table).filter_by(email=email).first()
+        user = models.session.query(User).filter_by(email=email).first()
         # user = user_parser(user)
     else:
         user = None
     return user
 
+# def get_user_by_id(id, organization):
+#     models.Base.metadata.clear()
+#     usr_table = models.create_users_table(organization)
+#     company = models.create_companies_table(usr_table)
+#     if id:
+#         user = models.session.query(usr_table).filter_by(id=id).first()
+#         obj = user_parser(user)
+#     else:
+#         user = None
+#     return obj
+
 def get_user_by_id(id, organization):
-    models.Base.metadata.clear()
-    usr_table = models.create_users_table(organization)
-    company = models.create_companies_table(usr_table)
+    # models.Base.metadata.clear()
+    User, Company, Task, Payslip, Messages = models.create_model_tables(organization)
     if id:
-        user = models.session.query(usr_table).filter_by(id=id).first()
+        user = models.session.query(User).filter_by(id=id).first()
         obj = user_parser(user)
     else:
         user = None
