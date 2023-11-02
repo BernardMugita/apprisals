@@ -14,6 +14,7 @@ import uuid
 import os
 
 
+Base = declarative_base()
 
 # load dotenv
 load_dotenv()
@@ -69,9 +70,8 @@ class TaskStatus(str, Enum):  # Enum class for task status
     rejected = "rejected"
 
 
-# Base = declarative_base()
 def create_model_tables(company_name):
-    Base = declarative_base()  # Create a declarative base class for SQLAlchemy
+    # Base = declarative_base()  # Create a declarative base class for SQLAlchemy
     class User(Base):
         __tablename__ = f"{company_name}_users"
 
@@ -156,9 +156,9 @@ Session = sessionmaker(bind=engine)  # Create a session
 session = Session()
 
 
-# # Create tables in the database
-# def create_tables():
-#     Base.metadata.create_all(engine)
+# Create tables in the database
+def create_tables():
+    Base.metadata.create_all(engine)
 
 def extract_name(domain):
     reg_patt = r"(?:https?:\/\/)?(?:[^@\/\n]+@)?(?:www\.)?([^:\/\n]+)"
@@ -167,11 +167,17 @@ def extract_name(domain):
     final = re.match(domain_patt, domain_name).group(1)
     return final
 
-# Base = declarative_base()
 def create_company(company_name, email, telephone, address, city, country, domain_name):
     try:
         table_name = extract_name(domain_name)
         User, Company, Tasks, Payslips, Messages = create_model_tables(table_name)
+        # Base.metadata.create_all(engine)
+        # res = create_company_tables(table_name)
+        # if res != "Success":
+        #     return f"Error: {res}"
+        # else:
+            # Base.metadata.clear()
+            # companies_table = create_companies_table(user)
         new_company = Company(name=company_name, email=email, telephone=telephone, address=address, city=city, country=country, domain_name=domain_name, table_name=table_name)
         session.add(new_company)
         session.commit()
@@ -179,43 +185,39 @@ def create_company(company_name, email, telephone, address, city, country, domai
     except Exception as e:
         return f"Error: {e}"
 
-# def create_company_tables(company_name):
-#     try:
-#         usr_table = f"{company_name}_users"
-#         tasks_table = f"{company_name}_tasks"
-#         payslips_table = f"{company_name}_payslips"
-#         messages_table = f"{company_name}_messages"
+def create_company_tables(company_name):
+    try:
+        usr_table = f"{company_name}_users"
+        tasks_table = f"{company_name}_tasks"
+        payslips_table = f"{company_name}_payslips"
+        messages_table = f"{company_name}_messages"
         
-#         User, Company, Tasks, Payslips, Messages = create_model_tables(company_name)
-#         Base.metadata.create_all(engine)
-#         return "Success"
-#     except Exception as e:
-#         return f"Error: {e}"
+        User, Company, Tasks, Payslips, Messages = create_model_tables(company_name)
+        Base.metadata.create_all(engine)
+        return "Success"
+    except Exception as e:
+        return f"Error: {e}"
 
-# # print(create_company_tables("mmmi"))
+# print(create_company_tables("mmmi"))
 
-# def delete_company_tables(company_name):
-#     try:
-#         usr_table = f"{company_name}_users"
-#         tasks_table = f"{company_name}_tasks"
-#         payslips_table = f"{company_name}_payslips"
-#         messages_table = f"{company_name}_messages"
+def delete_company_tables(company_name):
+    try:
+        usr_table = f"{company_name}_users"
+        tasks_table = f"{company_name}_tasks"
+        payslips_table = f"{company_name}_payslips"
+        messages_table = f"{company_name}_messages"
 
-#         usr_table = create_users_table(company_name)
-#         tasks_table = create_tasks_table(company_name)
-#         payslips_table = create_payslips_table(company_name)
-#         messages_table = create_messages_table(company_name)
-
-#         Base.metadata.drop_all(engine)
-#         return "Success"
-#     except Exception as e:
-#         return f"Error: {e}"
+        User, Company, Tasks, Payslips, Messages = create_model_tables(company_name)
+        Base.metadata.drop_all(engine, tables=[User.__table__, Tasks.__table__, Payslips.__table__, Messages.__table__])
+        return "Success"
+    except Exception as e:
+        return f"Error: {e}"
         
 
 
 # use this to test the create_company_tables function
 # create_company_tables("bazu")
-# print(delete_company_tables("acme"))
+# print(delete_company_tables("bolt"))
 
 
 

@@ -35,9 +35,9 @@ async def getuserbyid(request: Request):
         if usr == "Invalid":
             return "Invalid Token"
         else:
-            data = await request.json()
-            id = data["id"] # provide ID of user to get
-            users = user_funcs.get_user_by_id(id, usr["organization"]) 
+            # data = await request.json()
+            # id = data["id"] # provide ID of user to get
+            users = user_funcs.get_user_by_id(usr['id'], usr["organization"]) 
             return users
     else:
         return "Invalid Token" 
@@ -80,6 +80,7 @@ async def createuser(request: Request):
     else:
         return "Invalid Token"
     
+    
 @router.post("/users/updateuser")
 async def updateuser(request: Request):
     data = await request.json()
@@ -99,7 +100,7 @@ async def updateuser(request: Request):
             organization = data["organization"]
             telephone = data["telephone"]
             job_role = data["job_role"]
-            cmpid = data["cmpid"]
+            cmpid = data["cmpid"] # TODO: check if this is needed
             ans = user_funcs.edit_user(id, username, roles, first_name, last_name, email, organization, telephone, job_role, cmpid)
             return ans
     else:

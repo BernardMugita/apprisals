@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from routers import task_routes, user_routes
 import models
-import user_funcs
+import company_funcs
 import auth
 
 app = FastAPI()
@@ -44,7 +44,7 @@ async def createcompanytables(request: Request):
         if usr == False:
             return "Invalid Token"
         else:
-            ans = models.create_company_tables(company)
+            ans = company_funcs.create_company_tables(company)
             return ans
     else:
         return "Invalid Token"

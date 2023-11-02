@@ -54,8 +54,7 @@ def get_users(organization):
 #         user = None
 #     return user
 
-def get_user_by_email(email, organization):
-    # models.Base.metadata.clear()
+def get_user_by_email(email, organization):   
     User, Company, Task, Payslip, Messages = models.create_model_tables(organization)
     if email:
         user = models.session.query(User).filter_by(email=email).first()
@@ -114,8 +113,7 @@ def createOTP():
 
 # for creating a user
 def create_user(username, roles, first_name, last_name, email, organization, telephone, job_role):
-    usr_table = models.create_users_table(organization) # assuming the organization is the company name
-    # generate a one time password
+    User, Company, Task, Payslip, Messages = models.create_model_tables(organization)
     otp = createOTP()
     otp_res = send_OTP(email, otp)
     if otp_res.startswith("Error"):
@@ -123,12 +121,11 @@ def create_user(username, roles, first_name, last_name, email, organization, tel
     hash = bcrypt.hashpw(otp.encode('utf-8'), bcrypt.gensalt())
     try:
         # models.Base.metadata.clear()   
-        compnytable = models.create_companies_table(usr_table)
-        company = models.session.query(compnytable).filter_by(name="bazu").first() #TODO: change this to the company name
-        new_user = usr_table(username=username, roles=roles, first_name=first_name, last_name=last_name, email=email, organization=organization, telephone=telephone, hash=hash, job_role=job_role, company_id=company.id)
+        company = models.session.query(Company).filter_by(table_name=organization).first() #TODO: change this to the company name
+        new_user = User(username=username, roles=roles, first_name=first_name, last_name=last_name, email=email, organization=organization, telephone=telephone, hash=hash, job_role=job_role, company_id=company.id)
         models.session.add(new_user)
         models.session.commit()
-        usr_obj = models.session.query(usr_table).filter_by(email=email).filter_by(first_name=first_name).first()
+        usr_obj = models.session.query(User).filter_by(email=email).filter_by(first_name=first_name).first()
         res = user_parser(usr_obj)
         return res
     except Exception as e:
@@ -140,10 +137,8 @@ def create_user(username, roles, first_name, last_name, email, organization, tel
 
 def edit_user(id, username, roles, first_name, last_name, email, organization, telephone, job_role, company):
     try:
-        models.Base.metadata.clear()
-        usr_table = models.create_users_table(organization)
-        company_table = models.create_companies_table(usr_table)
-        user = models.session.query(usr_table).filter_by(id=id).first()
+        User, Company, Task, Payslip, Messages = models.create_model_tables(company)
+        user = models.session.query(User).filter_by(id=id).first()
         user.username = username
         user.roles = roles
         user.first_name = first_name
@@ -161,15 +156,13 @@ def edit_user(id, username, roles, first_name, last_name, email, organization, t
 
 def update_pass(userid, company, newpass): # for first time change
     try:
-        models.Base.metadata.clear()
-        usr_table = models.create_users_table(company)
-        company_table = models.create_companies_table(usr_table)
-        user = models.session.query(usr_table).filter_by(id=userid).first()
+        User, Company, Task, Payslip, Messages = models.create_model_tables(company)
+        user = models.session.query(User).filter_by(id=userid).first()
         hash = bcrypt.hashpw(newpass.encode('utf-8'), bcrypt.gensalt())
         # if user.has_changed_pass == False:
         #     return "User has already changed password"
         user.hash = hash
-        user.has_changed_pass = False
+        user.has_changed_pass = True
         models.session.commit()
         token = auth.createJWT(user)
         return {
@@ -185,10 +178,8 @@ def update_pass(userid, company, newpass): # for first time change
     
 def change_pass(otp, id, company, newpass):
     try:
-        models.Base.metadata.clear()
-        usr_table = models.create_users_table(company)
-        company_table = models.create_companies_table(usr_table)
-        user = models.session.query(usr_table).filter_by(id=id).first()
+        User, Company, Task, Payslip, Messages = models.create_model_tables(company)
+        user = models.session.query(User).filter_by(id=id).first()
         if user.has_changed_pass == True:
             return "User has already changed password"
         if bcrypt.checkpw(otp.encode('utf-8'), user.hash.encode('utf-8')):
