@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request
-from routers import task_routes, user_routes
+from routers import task_routes, user_routes, pslips_routes
 import models
 import company_funcs
 import auth
@@ -8,6 +8,7 @@ app = FastAPI()
 
 app.include_router(task_routes.router)
 app.include_router(user_routes.router)
+app.include_router(pslips_routes.router)
 
 # call the create_tables() function
 # create_tables() # will be done via api call

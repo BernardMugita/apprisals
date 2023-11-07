@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, String, Integer, Enum, ForeignKey, Float, Boolean
+from sqlalchemy import create_engine, Column, String, Integer, Enum, ForeignKey, Float, Boolean, JSON
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
 from enum import Enum as PydanticEnum
@@ -136,6 +136,8 @@ def create_model_tables(company_name):
         period = Column(String(20), nullable=False)
         amount = Column(Float, nullable=False)
         status = Column(String(50), nullable=False)
+        deductions = Column(String(50), nullable=False)
+        additions = Column(String(50), nullable=False)
 
     class Messages(Base):
         __tablename__ = f"{company_name}_messages"
