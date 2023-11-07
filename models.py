@@ -1,13 +1,8 @@
 from sqlalchemy import create_engine, Column, String, Integer, Enum, ForeignKey, Float, Boolean, JSON
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
-from enum import Enum as PydanticEnum
-from pydantic import BaseModel
 from dotenv import load_dotenv
 import pymysql
-import bcrypt
-import smtplib
-from email.mime.text import MIMEText
 import re
 
 import uuid

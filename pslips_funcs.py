@@ -165,3 +165,64 @@ def edit_payslip(payslip_id, employee_id, prepared_by_id, date, period, amount, 
             "payslip": None,
             "error": e,
         }
+    
+def delete_payslip(payslip_id, company_name):
+    try:
+        User, Company, Task, Payslip, Messages = models.create_model_tables(company_name)
+        payslip = models.session.query(Payslip).filter_by(id=payslip_id).first()
+        models.session.delete(payslip)
+        models.session.commit()
+        return {
+            "success": True,
+            "payslip": payslip_parser(payslip),
+            "error": None,
+        }
+    except Exception as e:
+        print(e)
+        return {
+            "success": False,
+            "payslip": None,
+            "error": e,
+        }
+    
+def add_deductions(payslip_id, deductions, company_name):
+    try:
+        User, Company, Task, Payslip, Messages = models.create_model_tables(company_name)
+        payslip = models.session.query(Payslip).filter_by(id=payslip_id).first()
+        to_deduct = json.loads(payslip.deductions)
+        to_deduct.append(deductions)
+        payslip.deductions = json.dumps(to_deduct)
+        models.session.commit()
+        return {
+            "success": True,
+            "payslip": payslip_parser(payslip),
+            "error": None,
+        }
+    except Exception as e:
+        print(e)
+        return {
+            "success": False,
+            "payslip": None,
+            "error": e,
+        }
+    
+def add_additions(payslip_id, additions, company_name):
+    try:
+        User, Company, Task, Payslip, Messages = models.create_model_tables(company_name)
+        payslip = models.session.query(Payslip).filter_by(id=payslip_id).first()
+        to_add = json.loads(payslip.additions)
+        to_add.append(additions)
+        payslip.additions = json.dumps(to_add)
+        models.session.commit()
+        return {
+            "success": True,
+            "payslip": payslip_parser(payslip),
+            "error": None,
+        }
+    except Exception as e:
+        print(e)
+        return {
+            "success": False,
+            "payslip": None,
+            "error": e,
+        }

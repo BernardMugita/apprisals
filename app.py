@@ -16,7 +16,7 @@ app.include_router(pslips_routes.router)
 
 @app.get("/")
 async def root():
-    return ("Hello from Nairobi")
+    return ("Habari kutoka Nairobi")
 
 
 @app.post("/createcompany")
