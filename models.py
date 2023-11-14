@@ -1,10 +1,10 @@
-from sqlalchemy import create_engine, Column, String, Integer, Enum, ForeignKey, Float, Boolean, JSON
+from sqlalchemy import create_engine, Column, String, Integer, Enum, ForeignKey, Float, Boolean, JSON, DateTime
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
 from dotenv import load_dotenv
 import pymysql
 import re
-
+import datetime
 import uuid
 import os
 
@@ -115,7 +115,10 @@ def create_model_tables(company_name):
         task_type = Column(String(50), nullable=False)
         rating = Column(Integer, nullable=False)
         feedback = Column(String(1000), nullable=False)
-        due_date = Column(String(20), nullable=False)
+        due_date = Column(String(50), nullable=False)
+        # add timestamps
+        created_at = Column(DateTime, default=datetime.datetime.utcnow)
+        updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
     class Payslips(Base):
         __tablename__ = f"{company_name}_payslips"

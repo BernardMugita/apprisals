@@ -37,10 +37,10 @@ def payslip_parser(payslip, many=False):
         to_add = json.loads(payslip.additions)
         if to_deduct:
             for x in to_deduct:
-                total_deductions = total_deductions + x["amount"]
+                total_deductions = total_deductions + int(x["amount"])
         if to_add:
             for x in to_add:
-                total_additions = total_additions + x["amount"]
+                total_additions = total_additions + int(x["amount"])
         net_pay = (payslip.amount + total_additions) - total_deductions
         print(net_pay, payslip.amount, total_additions, total_deductions)
         return {

@@ -76,6 +76,7 @@ async def createuser(request: Request):
             telephone = data["telephone"]
             job_role = data["job_role"]
             ans = user_funcs.create_user(username, roles, first_name, last_name, email, organization, telephone, job_role)
+            redis_funcs.redis_del(f"{organization}", 'allusers')
             return ans
     else:
         return "Invalid Token"

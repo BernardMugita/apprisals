@@ -16,6 +16,8 @@ def task_parser(task, many=False):
             'rating': task.rating,
             'feedback': task.feedback,
             'due_date': task.due_date,
+            'created_at': task.created_at,
+            'updated_at': task.updated_at,
         }
 
 def create_task(title, description, status, assigned_to_id, assigned_by_id, task_type, rating, feedback, due_date, company_name):
@@ -24,7 +26,7 @@ def create_task(title, description, status, assigned_to_id, assigned_by_id, task
         task = Tasks(
             title=title,
             description=description,
-            status='Pending',
+            status='in_progress',
             assigned_to_id=assigned_to_id,
             assigned_by_id=assigned_by_id,
             task_type=task_type,
@@ -34,7 +36,7 @@ def create_task(title, description, status, assigned_to_id, assigned_by_id, task
         )
         models.session.add(task)
         models.session.commit()
-        return "Success"
+        return task_parser(task)
     except Exception as e:
         print(e)
         return f"Error: {e}"
@@ -59,10 +61,11 @@ def get_task_by_id(task_id, company_name):
         print(e)
         return f"Error: {e}"
     
-def edit_task(title, description, status, assigned_to_id, assigned_by_id, task_type, rating, feedback, due_date, company_name):
+def edit_task(id, title, description, status, assigned_to_id, assigned_by_id, task_type, rating, feedback, due_date, company_name):
     try:
         User, Company, Task, Payslip, Messages = models.create_model_tables(company_name)
-        task = models.session.query(Task).filter_by(title=title).first()
+        task = models.session.query(Task).filter_by(id=id).first()
+        task.title = title
         task.description = description
         task.status = status
         task.assigned_to_id = assigned_to_id
@@ -72,7 +75,7 @@ def edit_task(title, description, status, assigned_to_id, assigned_by_id, task_t
         task.feedback = feedback
         task.due_date = due_date
         models.session.commit()
-        return "Success"
+        return task_parser(task)
     except Exception as e:
         print(e)
         return f"Error: {e}"
@@ -114,7 +117,7 @@ def mark_pending(task_id, company_name):
     try:
         User, Company, Task, Payslip, Messages = models.create_model_tables(company_name)
         task = models.session.query(Task).filter_by(id=task_id).first()
-        task.status = "Pending"
+        task.status = "in_progress"
         models.session.commit()
         return "Success"
     except Exception as e:
@@ -124,7 +127,7 @@ def mark_pending(task_id, company_name):
 def get_all_pending(user_id, company_name):
     try:
         User, Company, Task, Payslip, Messages = models.create_model_tables(company_name)
-        tasks = models.session.query(Task).filter_by(assigned_to_id=user_id, status='Pending').all()
+        tasks = models.session.query(Task).filter_by(assigned_to_id=user_id, status='in_progress').all()
         res = task_parser(tasks, many=True)
         return res
     except Exception as e:

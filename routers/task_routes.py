@@ -72,6 +72,7 @@ async def edit_single_task(request: Request):
             return "Invalid Token"
         else:
             data = await request.json()
+            id = data["task_id"]
             title = data["title"]
             description = data["description"]
             status = data["status"]
@@ -82,7 +83,7 @@ async def edit_single_task(request: Request):
             feedback = data["feedback"]
             due_date = data["due_date"]
             company_name = usr["organization"]
-            ans = task_funcs.edit_task(title, description, status, assigned_to_id, assigned_by_id, task_type, rating, feedback, due_date, company_name)
+            ans = task_funcs.edit_task(id,title, description, status, assigned_to_id, assigned_by_id, task_type, rating, feedback, due_date, company_name)
             return ans        
     else:
         return "Invalid Token"

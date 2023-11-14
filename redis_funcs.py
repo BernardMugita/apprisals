@@ -1,7 +1,7 @@
 import redis
 
 # Connect to Redis
-r = redis.Redis(host='localhost', port=6381, decode_responses=True)
+r = redis.Redis(host='localhost', port=6380, decode_responses=True)
 
 def redis_set(user, key, value, expire=None):
     if expire:
@@ -16,6 +16,11 @@ def redis_exists(user, key):
 def redis_del_all(user):
     for key in r.scan_iter(user):
         r.delete(key)
+    return "Cache Cleared"
+
+def redis_clear_all():
+    r.flushall()
+    return "Cache Cleared"
 
 def redis_get(user, key,):
     return r.hget(f'{user}', f'{key}')

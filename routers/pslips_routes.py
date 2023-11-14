@@ -39,7 +39,7 @@ async def get_all_payslips(request: Request):
         if usr == 'Invalid':
             return "Invalid Token"
         else:
-            data = await request.json()
+            # data = await request.json()
             company_name = usr["organization"]
             ans = pslips_funcs.get_payslips(company_name)
             return ans        
